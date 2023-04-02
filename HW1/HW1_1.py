@@ -97,11 +97,11 @@ for t in range(n):
 
 #Plots
 fig2, (ax1, ax2, ax3) = plt.subplots(3, 1)
-ax1.plot(time_discr, x.value, label="x")
-ax2.plot(time_discr, y.value, label="y")
+ax1.step(time_discr, x.value, label="x")
+ax2.step(time_discr, y.value, label="y")
 ax1.plot(time_discr, xg, color='red', label="xg")
 ax2.plot(time_discr, yg, color='red', label="yg")
-ax3.plot(time_discr, th.value, label="\u03B8")
+ax3.step(time_discr, th.value, label="\u03B8")
 ax3.plot(time_discr, thg, color='red', label="\u03B8g")
 ax1.set_xlabel("Time")
 ax1.set_ylabel("x")
@@ -115,7 +115,7 @@ ax3.legend()
 fig2.suptitle("Optimized Trajectory")
 
 fig3, ax = plt.subplots()
-ax.plot(x.VALUE, y.VALUE, label='Optimized')
+ax.step(x.VALUE, y.VALUE, label='Optimized')
 ax.plot(xg, yg, color='red', label='Goal')
 ax.set_ylim([-2, 2])
 ax.set_xlabel("x")
