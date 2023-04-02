@@ -4,10 +4,20 @@ import scipy.optimize as opt
 
 #plt.close('all')
 
-x0 = [0, 0, np.pi/4]
+x0 = [0, 0, np.pi/2-0.01] #x0[2]=np.pi/2 !!!
 T = 2*np.pi
-n = int(T/0.2)
+n = int(T/0.05)
 time_discr = np.linspace(0, T, n)
+
+'''
+Goal Trajectory
+'''
+xg = []
+for t in range(n):
+    xg = np.append(xg, 2*time_discr[t] / np.pi)
+yg = np.zeros(n)
+thg = np.zeros(n)
+thg.fill(90)
 
 '''
 Initial Trajectory
@@ -27,31 +37,28 @@ for t in time_discr:
     s_init[0] = np.append(s_init[0], x)
     s_init[1] = np.append(s_init[1], y)
     s_init[2] = np.append(s_init[2], th)
-'''
+
 #Plot
 fig, (ax1, ax2) = plt.subplots(2, 1, height_ratios=[2, 1])
-ax1.plot(s_init[0], s_init[1])
-ax2.plot(time_discr, s_init[2]*180/np.pi, label="\u03B8")
+ax1.plot(s_init[0], s_init[1], label='Initial pos')
+ax1.plot(xg, yg, color='red', label='Goal pos')
+ax2.plot(time_discr, s_init[2]*180/np.pi, label="\u03B8 Initial")
+ax2.plot(time_discr, thg, color='red', label="\u03B8 Goal")
 
 ax1.set_xlabel("x")
 ax1.set_ylabel("y")
 ax1.set_ylim([-2, 2])
 ax2.set_xlabel("Time")
 ax2.set_ylabel("Heading [°]")
+ax1.legend()
+ax2.legend()
 
 fig.suptitle("Initial Trajectory")
-'''
+
 
 '''
 Optimized Trajectory
 '''
-
-xg = []
-for t in range(n):
-    xg = np.append(xg, 2*time_discr[t] / np.pi)
-yg = np.zeros(n)
-thg = np.zeros(n)
-thg.fill(np.pi/2)
 
 from gekko import GEKKO
 m = GEKKO()
@@ -59,12 +66,13 @@ m = GEKKO()
 #Time
 m.time = np.linspace(0, T, n)
 
+a = 1000
 #Variables
-x = m.Var(value=0)
-y = m.Var(value=0)
-th = m.Var(value=0)
-u1 = m.Var(value=0)
-u2 = m.Var(value=0)
+x = m.Var(value=x0[0])
+y = m.Var(value=x0[1])
+th = m.Var(value=x0[2])
+u1 = m.Var(value=0, lb=-a, ub=a)
+u2 = m.Var(value=0, lb=-a, ub=a)
 t = m.Var(value=0, lb=0, ub=T)
 
 #Constraints
@@ -74,7 +82,7 @@ m.Equation(th.dt() == u2)
 m.Equation(t.dt() == 1)
 
 #Objective
-m.Obj((x - 2/np.pi *t)**2 + (y - 0)**2 + (th - np.pi/2)**2)
+m.Obj(1*(x - 2/np.pi *t)**2 + 1*(y - 0)**2 + 1*(th - np.pi/2)**2)
 
 m.options.IMODE = 6
 m.options.MAX_ITER=10000
@@ -84,6 +92,8 @@ m.solve(disp=True)
 costh = []
 for t in range(n):
     costh = np.append(costh, np.cos(th.value[t]))
+for t in range(n):
+    th.value[t] = th.value[t] * 180/np.pi
 
 #Plots
 fig2, (ax1, ax2, ax3) = plt.subplots(3, 1)
@@ -92,7 +102,7 @@ ax2.plot(time_discr, y.value, label="y")
 ax1.plot(time_discr, xg, color='red', label="xg")
 ax2.plot(time_discr, yg, color='red', label="yg")
 ax3.plot(time_discr, th.value, label="\u03B8")
-ax3.plot(time_discr, thg, color='red', label="\u03B8 g")
+ax3.plot(time_discr, thg, color='red', label="\u03B8g")
 ax1.set_xlabel("Time")
 ax1.set_ylabel("x")
 ax2.set_xlabel("Time")
@@ -112,11 +122,14 @@ ax.set_xlabel("x")
 ax.set_ylabel("y")
 fig3.suptitle("Optimized Trajectory")
 
-fig4, ax = plt.subplots()
-ax.step(time_discr, u1.value, label="u1")
-ax.step(time_discr, u2.value, label="u2")
-ax.legend()
-ax.set_xlabel("Time")
+fig4, (ax1, ax2) = plt.subplots(2, 1)
+ax1.step(time_discr, u1.value, label="u1")
+ax2.step(time_discr, u2.value, color='orange', label="u2")
+ax1.legend()
+ax2.legend()
+ax2.set_xlabel("Time")
+ax1.set_ylabel("u1")
+ax2.set_ylabel("u2")
 fig4.suptitle("Optimized Controls")
 
 plt.show()
