@@ -6,7 +6,7 @@ import scipy.optimize as opt
 
 x0 = [0, 0, np.pi/2-0.01] #x0[2]=np.pi/2 !!!
 T = 2*np.pi
-n = int(T/0.05)
+n = 1000 # int(T/0.05)
 time_discr = np.linspace(0, T, n)
 
 '''
@@ -47,13 +47,14 @@ ax2.plot(time_discr, thg, color='red', label="\u03B8 Goal")
 
 ax1.set_xlabel("x")
 ax1.set_ylabel("y")
-ax1.set_ylim([-2, 2])
+ax1.set_ylim([-2, 2.1])
 ax2.set_xlabel("Time")
 ax2.set_ylabel("Heading [°]")
 ax1.legend()
 ax2.legend()
 
 fig.suptitle("Initial Trajectory")
+plt.savefig('ME455_ActiveLearning/HW1/Problem 1/HW1_1_init_traj.png')
 
 
 '''
@@ -66,14 +67,14 @@ m = GEKKO()
 #Time
 m.time = np.linspace(0, T, n)
 
-a = 1000
+a = 5
 #Variables
 x = m.Var(value=x0[0])
 y = m.Var(value=x0[1])
 th = m.Var(value=x0[2])
-u1 = m.Var(value=0)#, lb=-a, ub=a)
-u2 = m.Var(value=0)#, lb=-a, ub=a)
-t = m.Var(value=0)#, lb=0, ub=T)
+u1 = m.Var(value=0, lb=-a, ub=a)
+u2 = m.Var(value=0, lb=-a, ub=a)
+t = m.Var(value=0, lb=0, ub=T)
 
 #Constraints
 m.Equation(x.dt() == m.cos(th)*u1)
@@ -113,6 +114,7 @@ ax1.legend()
 ax2.legend()
 ax3.legend()
 fig2.suptitle("Optimized Trajectory")
+plt.savefig('ME455_ActiveLearning/HW1/Problem 1/HW1_1_opt_time.png')
 
 fig3, ax = plt.subplots()
 ax.step(x.VALUE, y.VALUE, label='Optimized')
@@ -122,16 +124,18 @@ ax.set_ylim([-2, 2])
 ax.set_xlabel("x")
 ax.set_ylabel("y")
 fig3.suptitle("Optimized Trajectory")
+plt.savefig('ME455_ActiveLearning/HW1/Problem 1/HW1_1_opt_xy.png')
 
 fig4, (ax1, ax2) = plt.subplots(2, 1)
 ax1.step(time_discr, u1.value, label="u1")
 ax2.step(time_discr, u2.value, color='orange', label="u2")
-ax1.legend()
-ax2.legend()
+ax1.legend(loc='upper right')
+ax2.legend(loc='upper right')
 ax2.set_xlabel("Time")
 ax1.set_ylabel("u1")
 ax2.set_ylabel("u2")
 fig4.suptitle("Optimized Controls")
+plt.savefig('ME455_ActiveLearning/HW1/Problem 1/HW1_1_opt_u.png')
 
 plt.show()
 
