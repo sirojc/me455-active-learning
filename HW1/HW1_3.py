@@ -51,4 +51,4 @@ ax2.set_xlabel('Time')
 fig.suptitle('Riccati response')
 plt.show()
 
-#TODO: Plot difference x, u of repsonses riccati & TPVBP
+#TODO: Plot difference x, u of responses riccati & TPVBP
