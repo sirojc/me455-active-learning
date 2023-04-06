@@ -45,12 +45,7 @@ c = np.array([1, 0, 0.01])
 t = tT+h
 print("Computing Riccati...")
 while t > t0:
-    k1 = F(t, c)
-    k2 = F(t + h/2, c + h/2*k1)
-    k3 = F(t + h/2, c + h/2*k2)
-    k4 = F(t + h, c + h*k3)
-
-    c = c + h/6 * (k1 + 2*k2 + 2*k3 + k4)
+    c = c + h*F(t, c)
 
     p1 = np.insert(p1, 0, c[0])
     p2 = np.insert(p2, 0, c[1])
