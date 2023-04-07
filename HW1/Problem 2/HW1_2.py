@@ -4,7 +4,7 @@ from scipy.integrate import quad
 from scipy.optimize import minimize
 from gekko import GEKKO
 
-#Objective & Dynamics
+'''
 Q = np.array([[2, 0],[0, 0.01]])
 R = 0.1
 P = np.array([[1, 0],[0, 0.01]])
@@ -12,46 +12,13 @@ P = np.array([[1, 0],[0, 0.01]])
 A = np.array([[0, 1],[-1.6, -0.4]])
 B = np.array([[0],[1]])
 
-
-#Time
-T = 10
-n = 100
-dt = T / n
-time_discr = np.linspace(0, T, n)
-
-#y = [x1, x2, u]
-y0 = np.array([10, 0, 0])
-y = np.zeros((3, n))
-initial_guess = np.zeros(3*n)
-for e in range(n):
-    initial_guess[e] = y0[0]
-    initial_guess[n+e] = y0[1]
-    initial_guess[2*n+e] = y0[2]
-
-def objective(y):
-    intg = 0
-    for i in range(n):
-        intg = intg + dt*(0.1*y[2*n+i]**2 + np.dot(np.dot([y[i], y[n+i]], Q), np.transpose([y[i], y[n+i]])))
-    final = np.dot(np.dot([y[i], y[n+i]], P), np.transpose([y[i], y[n+i]]))
-    return 0.5 * (intg + final)
-
-tmp = []
-tmp.append({'type': 'eq', 'fun': lambda y: y[0] - 10})
-tmp.append({'type': 'eq', 'fun': lambda y: y[n] - 0})
-for i in range(n-1):
-        tmp.append({'type': 'eq', 'fun': lambda y: y[i+1] - y[i] - dt*(y[n+i])}) #y[i+1] == y[i] + dt*(y[n+i])
-        tmp.append({'type': 'eq', 'fun': lambda y: y[n+i+1] - y[n+i] - dt*(-1.6*y[i] -0.4*y[n+i] + y[2*n + i])}) #y[n+i+1] == y[n+i] + dt*(-1.6*y[i] -0.4*y[n+i] + y[2*n + i])
-
-cons = tuple(tmp)
-
-print('Starting Optimization...')
-res = minimize(objective, initial_guess, constraints=cons)
-print(res)
+x0 = np.array([10, 0])
+'''
 
 
 '''
-#Other try
-
+Other try
+'''
 x0 = np.array([10, 0])
 
 m = GEKKO()
@@ -59,42 +26,62 @@ m = GEKKO()
 #Time
 T = 10
 n = 1000
+h = T/n
 time_discr = np.linspace(0, T, n)
-m.time = time_discr
 
 #Variables
-x1 = m.Var(value=x0[0])
-x2 = m.Var(value=x0[1])
-u = m.Var()
-t = m.Var(value=0, lb=0, ub=T)
+'''
+x1 = [m.Var(10) for i in range(n)]
+x2 = [m.Var(0) for i in range(n)]
+u = [m.Var(0) for i in range(n)]
+'''
+x1 = m.Array(m.Var, n)
+x2 = m.Array(m.Var, n)
+u = m.Array(m.Var, n)
 
-#Constraints
-m.Equation(x1.dt() == x2)
-m.Equation(x2.dt() == -1.6*x1 -0.4*u) 
-m.Equation(t.dt() == 1)
+for i in range(n-1):
+    x1[i].value = 10
+    x2[i].value = 0
+    u[i].value = 0
+
+
+#Initial Conditions
+m.Equation(x1[0]==10)
+m.Equation(x2[0]==0) 
+
+# Dynamic Constraints
+for i in range(n-1):
+    m.Equation((x1[i+1] - x1[i])/h == x2[i])
+    m.Equation((x2[i+1] - x2[i])/h == -1.6*x1[i] -0.4*x2[i] + u[i])
 
 #Objective
 #m.Obj(0.5*(m.integral(0.1*(u**2) + np.dot(np.dot(np.array([x1, x2]), np.array([[0, 1],[-1.6, -0.4]])), np.array([[x1],[x2]]))))) #Add final value!
-m.Obj(0.5*(m.integral(0.1*(u**2) + 2*(x1**2) + 0.01*(x2**2))) + 0.5*(x1**2 + 0.01*(x2**2))) #Add final value!
 
-#m.Obj(objective(x1, x2, u))
+m.Obj(0.5*(x1[n-1]**2 + 0.01*x2[n-1]**2 + (m.sum([h*(0.1*u[i]**2 + 2*x1[i]**2 + 0.01*x2[i]**2) for i in range(n-1)]))))
 
-m.options.IMODE = 6
+m.options.IMODE = 3
 m.options.MAX_ITER=10000
 print("Solving...")
 m.solve(disp=True)
 
+x1f = []
+x2f = []
+uf = []
+for i in range(n):
+    x1f.append(x1[i].value)
+    x2f.append(x2[i].value)
+    uf.append(u[i].value)
+
+
 fig, (ax1, ax2) = plt.subplots(2, 1)
-ax1.step(time_discr, x1.value, label="x1")
-ax1.step(time_discr, x2.value, label="x2")
-ax2.step(time_discr, u.value, color='red', label="u")
-ax1.set_ylabel("x(t)")
+ax1.step(time_discr, x1f, label=r"$x1$")
+ax1.step(time_discr, x2f, label=r"$x2$")
+ax2.step(time_discr, uf, color='red', label=r"$u$")
+ax1.set_ylabel(r"$x(t)$")
 ax2.set_xlabel("Time")
-ax2.set_ylabel("u(t)")
+ax2.set_ylabel(r"$u(t)$")
 ax1.legend()
 ax2.legend()
-#plt.savefig('ME455_ActiveLearning/HW1/Problem 2/HW1_2_opt_time.png')
+plt.savefig('ME455_ActiveLearning/HW1/Problem 2/HW1_2_opt_time.png')
 
 plt.show()
-'''
-
