@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import linalg, integrate
-
 
 Q = np.array([[2, 0],[0, 0.01]])
 R = 0.1
@@ -22,11 +20,6 @@ x0 = np.array([[10],[0]])
 # b' = 10bc -a + 0.4b + 1.6c
 # c' = 10c^2 + 0.8c -2b -0.01
 
-def F(t, c):
-    return np.array([10*c[1]**2 + 3.2*c[2] - 2,
-                    10*c[1]*c[2] - c[0] + 0.4*c[1] + 1.6*c[2],
-                    10*c[2]**2 + 0.8*c[2] - 2*c[1] - 0.01])
-
 t0 = 0
 tT = 10
 h = -0.01 # = 1000 steps; backwards, as condition for tT is given
@@ -35,35 +28,44 @@ time_discr = np.linspace(t0, tT, n)
 
 pT = np.array([1, 0, 0.01])
 
-p1 = [pT[0]]
-p2 = [pT[1]]
-p3 = [pT[2]]
+p1 = np.zeros(n)
+p2 = np.zeros(n)
+p3 = np.zeros(n)
+p1[n-1] = pT[0]
+p2[n-1] = pT[1]
+p3[n-1] = pT[2]
 
 c = np.array([1, 0, 0.01])
 
 # Implement Runge-Kutta
-t = tT+h
-print("Computing Riccati...")
-while t > t0:
-    c = c + h*F(t, c)
-
-    p1 = np.insert(p1, 0, c[0])
-    p2 = np.insert(p2, 0, c[1])
-    p3 = np.insert(p3, 0, c[2])
-    t = t + h
+i = n-2
+print("Computing Riccati.")
+while i >= 0:
+    p1[i] = p1[i+1] + h*(10*p2[i+1]**2 + 3.2*p3[i+1] - 2)
+    p2[i] = p2[i+1] + h*(10*p2[i+1]*p3[i+1] - p1[0] + 0.4*p2[i+1] + 1.6*p3[i+1])
+    p3[i] = p3[i+1] + h*(10*p3[i+1]**2 + 0.8*p3[i+1] - 2*p2[i+1] - 0.01)
+    i = i -1
 
 # u = -1/R*B.T*Phi(t)*x(t)
-u = np.array([0])
-x1 = np.array([10])
-x2 = np.array([0])
-print("Computing states & input...")
-for t in range(n-1):
-    u = np.append(u, -1/R *(p2[t]*x1[t] + p3[t]*x2[t]))
-    x1 = np.append(x1, np.abs(h)*(x2[t]))
-    x2 = np.append(x2, np.abs(h)*(-1.6*x1[t]-0.4*x2[t] + u[t]))
+u = np.zeros(n)
+x1 = np.zeros(n)
+x1[0] = 10
+x2 = np.zeros(n)
+print("Computing states & input.")
+for i in range(n-1):
+    u[i] = -1/R *(p2[i]*x1[i] + p3[i]*x2[i])
+    x1[i+1] = x1[i] + np.abs(h)*(x2[i])
+    x2[i+1] = x2[i] + np.abs(h)*(-1.6*x1[i] -0.4*x2[i] + u[i])
 
 
 #Plots
+fig2, (ax1, ax2, ax3) = plt.subplots(3, 1)
+ax1.step(time_discr, p1)
+ax2.step(time_discr, p2)
+ax3.step(time_discr, p3)
+ax2.set_xlabel('Time')
+fig2.suptitle('Riccati')
+
 fig, (ax1, ax2) = plt.subplots(2, 1)
 ax1.step(time_discr, x1, label='x1')
 ax1.step(time_discr, x2, label='x2')

@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import linalg, integrate
-
 
 Q = np.array([[2, 0],[0, 0.01]])
 R = 0.1
@@ -35,59 +33,76 @@ time_discr = np.linspace(t0, tT, n)
 
 pT = np.array([1, 0, 0.01])
 
-p1 = [pT[0]]
-p2 = [pT[1]]
-p3 = [pT[2]]
+p1 = np.zeros(n)
+p2 = np.zeros(n)
+p3 = np.zeros(n)
+p1[n-1] = pT[0]
+p2[n-1] = pT[1]
+p3[n-1] = pT[2]
 
 c = np.array([1, 0, 0.01])
 
 # Implement Runge-Kutta
 t = tT+h
 print("Computing Riccati...")
-while t > t0:
+while t >= 0:
     k1 = F(t, c)
     k2 = F(t + h/2, c + h/2*k1)
     k3 = F(t + h/2, c + h/2*k2)
     k4 = F(t + h, c + h*k3)
 
     c = c + h/6 * (k1 + 2*k2 + 2*k3 + k4)
-
-    p1 = np.insert(p1, 0, c[0])
-    p2 = np.insert(p2, 0, c[1])
-    p3 = np.insert(p3, 0, c[2])
+    i = int(t/tT * n)
+    p1[i] = c[0]
+    p2[i] = c[1]
+    p3[i] = c[2]
     t = t + h
 
 # u = -1/R*B.T*Phi(t)*x(t)
-u = np.array([0])
-x1 = np.array([10])
-x2 = np.array([0])
+u = np.zeros(n)
+x1 = np.zeros(n)
+x1[0] = 10
+x2 = np.zeros(n)
 print("Computing states & input...")
 for t in range(n-1):
-    u = np.append(u, -1/R *(p2[t]*x1[t] + p3[t]*x2[t]))
-    x1 = np.append(x1, np.abs(h)*(x2[t]))
-    x2 = np.append(x2, np.abs(h)*(-1.6*x1[t]-0.4*x2[t] + u[t]))
+    u[t] = -1/R *(p2[t]*x1[t] + p3[t]*x2[t])
+    x1[t+1] = x1[t] + np.abs(h)*(x2[t])
+    x2[t+1] = x2[t] + np.abs(h)*(-1.6*x1[t] -0.4*x2[t] + u[t])
 
 
 #Plots
 fig, (ax1, ax2) = plt.subplots(2, 1)
-ax1.step(time_discr, x1, label='x1')
-ax1.step(time_discr, x2, label='x2')
-ax2.step(time_discr, u, label='u')
+ax1.step(time_discr, x1, label=r'$x1$')
+ax1.step(time_discr, x2, label=r'$x2$')
+ax2.step(time_discr, u, color='red', label=r'$u$')
 ax1.legend()
 ax2.legend()
 ax2.set_xlabel('Time')
-fig.suptitle('Riccati response')
-
+fig.suptitle('Response using Riccati with Runge-Kutta')
+'''
+fig3, (ax1, ax2, ax3) = plt.subplots(3, 1)
+ax1.step(time_discr, p1)
+ax2.step(time_discr, p2)
+ax3.step(time_discr, p3)
+ax2.set_xlabel('Time')
+fig3.suptitle('Riccati Matrix')
+'''
 
 #Import results from Problem 2
-'''
+res_P2 = np.genfromtxt("ME455_ActiveLearning/HW1/results_P2.csv", delimiter=',')
+x1BP = res_P2[:,0]
+x2BP = res_P2[:,1]
+uBP = res_P2[:,2]
+
+#Plot difference
 fig2, (ax1, ax2) = plt.subplots(2, 1)
-ax1.step(time_discr, x1 - x1BP, label=r'$x1_{BP} - x1_{R}$')
-ax1.step(time_discr, x2 - x2BP, label=r'$x2_{BP} - x2_{R}$')
-ax2.step(time_discr, u - uBP, label=r'$u_{BP} - u_{R}$')
+ax1.step(time_discr, x1BP - x1, label=r'$x1_{BP} - x1_{R}$')
+ax1.step(time_discr, x2BP - x2, label=r'$x2_{BP} - x2_{R}$')
+ax2.step(time_discr, uBP - u, label=r'$u_{BP} - u_{R}$')
 ax1.legend()
 ax2.legend()
 ax2.set_xlabel('Time')
-fig.suptitle('Difference TPVBP vs. Riccati')
-'''
+fig2.suptitle('Difference TPVBP vs. Riccati')
+plt.savefig('ME455_ActiveLearning/HW1/Problem 3/HW1_3_diff.png')
+
 plt.show()

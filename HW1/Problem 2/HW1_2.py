@@ -68,9 +68,9 @@ x1f = []
 x2f = []
 uf = []
 for i in range(n):
-    x1f.append(x1[i].value)
-    x2f.append(x2[i].value)
-    uf.append(u[i].value)
+    x1f.append(x1[i].value[0])
+    x2f.append(x2[i].value[0])
+    uf.append(u[i].value[0])
 
 
 fig, (ax1, ax2) = plt.subplots(2, 1)
@@ -83,5 +83,14 @@ ax2.set_ylabel(r"$u(t)$")
 ax1.legend()
 ax2.legend()
 plt.savefig('ME455_ActiveLearning/HW1/Problem 2/HW1_2_opt_time.png')
+
+results = np.empty((n, 3))
+print(x1f[100])
+for i in range(n-1):
+    results[i,0] = x1f[i]
+    results[i,1] = x2f[i]
+    results[i,2] = uf[i]
+print(results)
+np.savetxt("ME455_ActiveLearning/HW1/results_P2.csv", results, delimiter=",")
 
 plt.show()
