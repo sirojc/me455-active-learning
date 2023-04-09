@@ -39,7 +39,7 @@ p3[n-1] = pT[2]
 i = n-2
 print("Computing Riccati.")
 while i >= 0:
-    p1[i] = p1[i+1] + h*(10*p2[i+1]**2 + 3.2*p3[i+1] - 2)
+    p1[i] = p1[i+1] + h*(10*p2[i+1]**2 + 3.2*p2[i+1] - 2)
     p2[i] = p2[i+1] + h*(10*p2[i+1]*p3[i+1] - p1[i+1] + 0.4*p2[i+1] + 1.6*p3[i+1])
     p3[i] = p3[i+1] + h*(10*p3[i+1]**2 + 0.8*p3[i+1] - 2*p2[i+1] - 0.01)
     i = i -1
@@ -73,16 +73,20 @@ ax2.legend()
 ax2.set_xlabel('Time')
 fig.suptitle('Riccati response')
 
-
 #Import results from Problem 2
-'''
+res_P2 = np.genfromtxt("ME455_ActiveLearning/HW1/results_P2.csv", delimiter=',')
+x1BP = res_P2[:,0]
+x2BP = res_P2[:,1]
+uBP = res_P2[:,2]
+
+#Plot difference
 fig2, (ax1, ax2) = plt.subplots(2, 1)
-ax1.step(time_discr, x1 - x1BP, label=r'$x1_{BP} - x1_{R}$')
-ax1.step(time_discr, x2 - x2BP, label=r'$x2_{BP} - x2_{R}$')
-ax2.step(time_discr, u - uBP, label=r'$u_{BP} - u_{R}$')
+ax1.step(time_discr, x1BP - x1, label=r'$x1_{BP} - x1_{R}$')
+ax1.step(time_discr, x2BP - x2, label=r'$x2_{BP} - x2_{R}$')
+ax2.step(time_discr, uBP - u, label=r'$u_{BP} - u_{R}$')
 ax1.legend()
 ax2.legend()
 ax2.set_xlabel('Time')
-fig.suptitle('Difference TPVBP vs. Riccati')
-'''
+fig2.suptitle('Difference TPVBP vs. Riccati')
+
 plt.show()
