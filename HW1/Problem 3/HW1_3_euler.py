@@ -35,14 +35,12 @@ p1[n-1] = pT[0]
 p2[n-1] = pT[1]
 p3[n-1] = pT[2]
 
-c = np.array([1, 0, 0.01])
-
 # Implement Runge-Kutta
 i = n-2
 print("Computing Riccati.")
 while i >= 0:
     p1[i] = p1[i+1] + h*(10*p2[i+1]**2 + 3.2*p3[i+1] - 2)
-    p2[i] = p2[i+1] + h*(10*p2[i+1]*p3[i+1] - p1[0] + 0.4*p2[i+1] + 1.6*p3[i+1])
+    p2[i] = p2[i+1] + h*(10*p2[i+1]*p3[i+1] - p1[i+1] + 0.4*p2[i+1] + 1.6*p3[i+1])
     p3[i] = p3[i+1] + h*(10*p3[i+1]**2 + 0.8*p3[i+1] - 2*p2[i+1] - 0.01)
     i = i -1
 
