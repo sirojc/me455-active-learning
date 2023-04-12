@@ -94,3 +94,5 @@ print(results)
 np.savetxt("ME455_ActiveLearning/HW1/results_P2.csv", results, delimiter=",")
 
 plt.show()
+
+

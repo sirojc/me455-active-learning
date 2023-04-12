@@ -79,6 +79,7 @@ ax1.legend()
 ax2.legend()
 ax2.set_xlabel('Time')
 fig.suptitle('Response using Riccati with Runge-Kutta')
+
 '''
 fig3, (ax1, ax2, ax3) = plt.subplots(3, 1)
 ax1.step(time_discr, p1)
