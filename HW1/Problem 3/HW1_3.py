@@ -99,7 +99,7 @@ uBP = res_P2[:,2]
 fig2, (ax1, ax2) = plt.subplots(2, 1)
 ax1.step(time_discr, x1BP - x1, label=r'$x1_{BP} - x1_{R}$')
 ax1.step(time_discr, x2BP - x2, label=r'$x2_{BP} - x2_{R}$')
-ax2.step(time_discr, uBP - u, label=r'$u_{BP} - u_{R}$')
+ax2.step(time_discr, uBP - u, color='red', label=r'$u_{BP} - u_{R}$')
 ax1.legend()
 ax2.legend()
 ax2.set_xlabel('Time')
