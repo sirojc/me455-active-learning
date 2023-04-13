@@ -72,8 +72,8 @@ for t in range(n-1):
 
 #Plots
 fig, (ax1, ax2) = plt.subplots(2, 1)
-ax1.step(time_discr, x1, label=r'$x1$')
-ax1.step(time_discr, x2, label=r'$x2$')
+ax1.step(time_discr, x1, label=r'$x_{1}$')
+ax1.step(time_discr, x2, label=r'$x_{2}$')
 ax2.step(time_discr, u, color='red', label=r'$u$')
 ax1.legend()
 ax2.legend()
@@ -97,11 +97,13 @@ uBP = res_P2[:,2]
 
 #Plot difference
 fig2, (ax1, ax2) = plt.subplots(2, 1)
-ax1.step(time_discr, x1BP - x1, label=r'$x1_{BP} - x1_{R}$')
-ax1.step(time_discr, x2BP - x2, label=r'$x2_{BP} - x2_{R}$')
+ax1.step(time_discr, x1BP - x1, label=r'$x_{1,BP} - x_{1,R}$')
+ax1.step(time_discr, x2BP - x2, label=r'$x_{2,BP} - x_{2,R}$')
 ax2.step(time_discr, uBP - u, color='red', label=r'$u_{BP} - u_{R}$')
 ax1.legend()
 ax2.legend()
+ax1.set_ylabel(r'$\Delta~x(t)$')
+ax2.set_ylabel(r'$\Delta~u(t)$')
 ax2.set_xlabel('Time')
 fig2.suptitle('Difference TPVBP vs. Riccati')
 plt.savefig('ME455_ActiveLearning/HW1/Problem 3/HW1_3_diff.png')

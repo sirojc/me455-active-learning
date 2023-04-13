@@ -31,7 +31,7 @@ for i in range(10):
         dir[i][1,t+1] = dir[i][1,t] + h*(-1.6*dir[i][0,t] -0.4*dir[i][1,t] + dir[i][2,t]) 
         abs = np.sqrt(dir[i][0,t]**2 + dir[i][1,t]**2 + dir[i][2,t]**2)
     a *= 1.3
-    b *= -0.9
+    b *= -1.1
     c += (0.2+0.5*c)
 
 dir_der = np.zeros(10)
@@ -42,10 +42,10 @@ for z in range(len(dir)):
     for t in range(n-1):
         intg += h*(2*x1sol[t]*dir[z][0,t] + 0.01*x2sol[t]*dir[z][1,t] + 0.1*usol[t]*dir[z][2,t])
     fV = x1sol[-1]*dir[z][0,-1] + 0.01*x2sol[-1]*dir[z][1,-1]
-    dir_der[z] = intg + fV
+    dir_der[z] = round(intg + fV,9)
 
 #Generate a table figure showing the index and dir_der in a two column table
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(4, 3))
 ax.axis('tight')
 ax.axis('off')
 the_table = ax.table(cellText=[['Idx','a','b','c', '$DJ(x_{sol}(t), u_{sol}(t))*$\u03B6$(t)$'], ['1',val[0][0], val[1][0], val[2][0], dir_der[0]],
@@ -58,7 +58,7 @@ the_table = ax.table(cellText=[['Idx','a','b','c', '$DJ(x_{sol}(t), u_{sol}(t))*
                                ['8',val[0][7], val[1][7], val[2][7], dir_der[7]],
                                ['9',val[0][8], val[1][8], val[2][8], dir_der[8]],
                                ['10',val[0][9], val[1][9], val[2][9], dir_der[9]]], loc='center')
-ax.set_title(r" $\frac{d}{dt}z(t) = Az + Bv, v(t) = a*sin(2pi*bt/n) + c$")
+ax.set_title(r"$\frac{d}{dt}z(t) = Az + Bv, v(t) = a*sin(\frac{2pi*b}{n}t) + c$")
 the_table.auto_set_column_width(col=0)
 the_table.auto_set_column_width(col=1)
 the_table.auto_set_column_width(col=2)

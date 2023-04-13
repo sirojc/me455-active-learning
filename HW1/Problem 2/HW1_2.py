@@ -74,14 +74,15 @@ for i in range(n):
 
 
 fig, (ax1, ax2) = plt.subplots(2, 1)
-ax1.step(time_discr, x1f, label=r"$x1$")
-ax1.step(time_discr, x2f, label=r"$x2$")
+ax1.step(time_discr, x1f, label=r"$x_{1}$")
+ax1.step(time_discr, x2f, label=r"$x_{2}$")
 ax2.step(time_discr, uf, color='red', label=r"$u$")
 ax1.set_ylabel(r"$x(t)$")
 ax2.set_xlabel("Time")
 ax2.set_ylabel(r"$u(t)$")
 ax1.legend()
 ax2.legend()
+ax1.set_title('TPBVP Optimized Controls')
 plt.savefig('ME455_ActiveLearning/HW1/Problem 2/HW1_2_opt_time.png')
 
 results = np.empty((n, 3))
