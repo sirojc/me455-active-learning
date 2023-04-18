@@ -28,7 +28,7 @@ def J(x, u):
 def DJ(x, u, zheta):
     intg = 0
     for i in range(len(x)):
-        intg += h*2*(np.dot(np.dot((x[i] - x_g[i]).T, Q), zheta[0:2, i]) + np.dot(np.dot(u[i].T, R), zheta[3:4, i]))
+        intg += h*2*(np.dot(np.dot((x[i] - x_g[i]).T, Q), zheta[i, :3]) + np.dot(np.dot(u[i].T, R), zheta[i, 3:]))
     return intg
 
 
@@ -59,7 +59,7 @@ x_iLQR = x_init
 zheta = np.zeros((n,5)) # zheta = [z0, z1, z2, v0, v1]
 
 i = 0
-while i==0 or np.abs(zheta[:,i]) > eps:
+while i==0 or np.abs(DJ(x_iLQR, u_iLQR, zheta)) > eps:
     # Get zheta (perturbation)
     # ???
 
@@ -69,8 +69,7 @@ while i==0 or np.abs(zheta[:,i]) > eps:
     gamma = 1
     J_u = J(x_iLQR, u_iLQR)
     DJ_u_zheta = DJ(x_iLQR, u_iLQR, zheta)
-    while J(dynamics(x0, u_iLQR + gamma*zheta[3:4]), u_iLQR + gamma*zheta[3:4]) > J_u + alpha*gamma*DJ_u_zheta:
-        # ???
+    while J(dynamics(x0, u_iLQR + gamma*zheta[:, :3]), u_iLQR + gamma*zheta[:, 3:]) > J_u + alpha*gamma*DJ_u_zheta: # Goal Trajectory may not have same amount of steps as step size variable?
         gamma *= beta
 
     # Update x, u for all times
