@@ -61,25 +61,30 @@ def get_pr0(gg, loc, i, j):
             return 0
     return 1/(gg**2 - len(np.unique(loc, axis=0)))
 
-def get_u(post, prior, loc, S, possib_u):
+def get_u(post, prior, loc, S, possib_u, gg, meas_prob):
     EdS = float('inf')
     min_u = np.array([0, 0])
     min_EdS = float('inf')
     for u in possib_u:
-        EdS = get_EdS(post, prior, loc[-1]+u, S, loc)
+        rj = loc[-1]+u
+        sim_loc = np.vstack((loc, rj))
+        EdS = get_EdS(post, prior, sim_loc, S, gg, meas_prob)
         #print(EdS)
         if EdS < min_EdS:
             min_EdS = EdS
             min_u = u
     return min_u
 
-def get_EdS(post, prior, rj, S, loc):
-    EdS = prior[int(rj[0]), int(rj[1])]*(-S) + (1-prior[int(rj[0]), int(rj[1])])*get_EdS_cond(post, rj, loc)
+def get_EdS(post, prior, sim_loc, S, gg, meas_prob):
+    rj = sim_loc[-1]
+    EdS = prior[int(rj[0]), int(rj[1])]*(-S) + (1-prior[int(rj[0]), int(rj[1])])*get_EdS_cond(post, sim_loc, gg, meas_prob, S)
     return EdS
 
-def get_EdS_cond(post, rj, loc): #TODO
-    EdS_cond = 0
-    return EdS_cond
+def get_EdS_cond(post, sim_loc, gg, meas_prob, S):
+    sim_meas = (np.random.random() < meas_prob[int(sim_loc[-1, 0]),int(sim_loc[-1, 1])])
+    post, update_loc = update_post(post, sim_meas, meas_prob[int(sim_loc[-1, 0]),int(sim_loc[-1, 1])], sim_loc, gg)
+    S2 = get_S(gg, post)
+    return S2 - S
 
 def get_S(gg, post):
     S = 0
@@ -126,15 +131,17 @@ def main():
 
         ### Search
         print(S)
-        while S != 0:
+        i = 0
+        while S != 0 and i < 500:
             meas = (np.random.random() < meas_prob[int(loc[-1, 0]),int(loc[-1, 1])])
             post, update_loc = update_post(post, meas, meas_prob[int(loc[-1, 0]),int(loc[-1, 1])], loc, gg)
-            S = get_S(gg, post)
-            #print(S)
-            u = get_u(post, prior, loc, S, update_loc) ### # of size (2,1): choose direction with highest expected entropy reduction
+            S = get_S(gg, post) # S != 0 if on door
+            print(S)
+            u = get_u(post, prior, loc, S, update_loc, gg, meas_prob) ### # of size (2,1): choose direction with highest expected entropy reduction
             loc = np.vstack((loc, loc[-1] + u))
             prior = post
-            print(loc[-1])
+            #print(loc[-1])
+            i += 1
 
         plotting.plot_trajectory(gg, door, loc, s)
     

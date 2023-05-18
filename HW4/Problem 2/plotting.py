@@ -18,7 +18,7 @@ def plot_trajectory(gg, door, loc, s):
     axs.set_yticks(minor_ticks, minor=True)
     axs.grid(which='both', alpha=0.8)
 
-    axs.plot(loc[:, 0], loc[:, 1], color='k', linewidth='5', label='Trajectory')
+    axs.plot(loc[:, 0], loc[:, 1], color='k', linewidth='2', label='Trajectory')
     axs.plot(loc[0, 0], loc[0, 1], color='r', marker='s', markersize=10, label='Start')
     axs.plot(door[0], door[1], color='g', marker='s', markersize=10, label='Door')
 
