@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import plotting
+from plotting import plot_trajectory
 import random
+from PIL import Image
+import os, shutil
+
 
 # Plots LaTeX-Style
 plt.rcParams['mathtext.fontset'] = 'stix'
@@ -35,9 +38,9 @@ def init_door(door, gg):
 ### Belief ###
 
 def update_likelihood(meas, x, y, gg):
-    likelihood = 0.01 * np.ones((gg,gg))
-
+    
     if meas == 1:
+        likelihood = 0.01 * np.ones((gg,gg))
         likelihood[x, y] = 1.0
         # Hourglass shape
         y_list = [y-1, y+1]
@@ -57,6 +60,7 @@ def update_likelihood(meas, x, y, gg):
                     likelihood[x+j, i] = 1.0/4.0
     
     else: # meas == 0
+        likelihood = 0.99 * np.ones((gg,gg))
         likelihood[x, y] = 0
 
         y_list = [y-1, y+1]
@@ -135,7 +139,7 @@ def get_u(post, path, S, u_options, meas_likelihood, meas, visited, sq_unvisited
         if exp_red_S > max_exp_red_S: # keep u with highest expected entropy recduction
             max_exp_red_S = exp_red_S
             best_u = u
-    print('iter={}\tS={}\tz={}\tfsq={}\tu={}\t\texp_red_S={}'.format(i, S, meas, sq_unvisited, best_u, exp_red_S_l))
+    print('iter={}\tS={}\tz={}\tfsq={}\tu={}\texp_red_S={}'.format(i, S, meas, sq_unvisited, best_u, exp_red_S_l))
     return best_u
 
 ### Entropy ###
@@ -150,7 +154,7 @@ def get_exp_red_S(post, rj, S, meas_likelihood, visited, sq_unvisited):
 
     S0, S1 = get_S(post0), get_S(post1)
 
-    return pmeas1 * (S - S1) + (1-pmeas1) * (S - S0)
+    return np.abs(pmeas1 * (S - S1) + (1-pmeas1) * (S - S0))
 
 def get_S(prob):
     S = 0
@@ -166,9 +170,9 @@ def get_S(prob):
 def main():
     ### Initialize
     gg = 25
-    eps = 0.0001
-
+    
     for sim in range(4):
+        belief_plots = []
         # Start Locations
         door = np.random.randint(3,gg-3,2)
         start = np.random.randint(0,gg,2)
@@ -185,7 +189,7 @@ def main():
 
         ### Search
         i = 0
-        while i < 2000:
+        while i < 1000:
             if path[-1,0] != door[0] or path[-1,1] != door[1]:
                 # Take binary measurement
                 meas = int(np.random.random() < likelihood[int(path[-1, 0]),int(path[-1, 1])])
@@ -201,22 +205,32 @@ def main():
 
                 # Compute Entropy
                 S = get_S(post)
-
+                
                 # Take next step based on maximum expected entropy reduction
                 u = get_u(post, path, S, u_options, meas_likelihood, meas, visited, sq_unvisited, i)
-                # u = random.choice(u_options)
+
                 path = np.vstack((path, path[-1] + u))
-                # plt.scatter(path[-1,0], path[-1,1])
-                # plt.draw()
-                # plt.imshow(post.T)
-                # plt.pause(0.001)
+                
+                # Belief gif
+                plt.scatter(path[-1,0], path[-1,1])
+                plt.draw()
+                plt.imshow(post.T, origin='lower')
+                plt.tick_params(axis='both', which='both', bottom=False, top=False, labelbottom=False, right=False, left=False, labelleft=False)
+                plt.title('Run ' + str(sim+1))
+                plt.savefig('./ME455_ActiveLearning/HW4/Problem 2/plots/belief_run' + str(sim+1) + '/belief' + str(i) + '.png')
+                belief_plots.append(Image.open('./ME455_ActiveLearning/HW4/Problem 2/plots/belief_run' + str(sim+1) + '/belief' + str(i) + '.png'))
 
             else:
                 break
             i += 1
 
-        plotting.plot_trajectory(gg, door, path, sim)
+        # Belief gif
+        belief_plots[0].save('./ME455_ActiveLearning/HW4/Problem 2/plots/belief_run' + str(sim+1) + '.gif', save_all=True, append_images=belief_plots[1:], optimize=False, duration=int(len(belief_plots)/10), loop=0)
+        plot_trajectory(gg, door, path, sim)
     
 
 if __name__ == "__main__":
+    for root, dirs, files in os.walk('./ME455_ActiveLearning/HW4/Problem 2/plots'):
+        for file in files:
+            os.remove(os.path.join(root, file))
     main()
