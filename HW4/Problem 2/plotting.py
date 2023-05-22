@@ -12,7 +12,7 @@ def update_line(line, cmap, norm):
     return line
 
 def plot_trajectory(gg, door, loc, s):
-    fig, axs = plt.subplots()
+    fig, axs = plt.subplots(figsize=(4, 4))
     axs.set_xlim([0, gg])
     axs.set_ylim([0, gg])
 

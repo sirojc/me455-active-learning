@@ -77,11 +77,20 @@ def update_likelihood(meas, x, y, gg):
 
     return likelihood
 
-def update_post(post, likelihood):
-    post = post * likelihood
+def update_post(visited, likelihood):
+    post = visited * likelihood
 
     post = post / np.sum(post) # normalize
     return post
+
+def update_visited(visited, x, y, sq_unvisited):
+    gg = len(visited[0])
+    visited[x, y] = 0
+    for i in range(gg):
+        for j in range(gg):
+            if visited[i, j] > 0.0001:
+                visited[i, j] = 1 / sq_unvisited
+    return visited
 
 ### u ###
 
@@ -111,7 +120,7 @@ def get_options(x, y, gg):
 
     return u_options
 
-def get_u(post, path, S, u_options, meas_likelihood):
+def get_u(post, path, S, u_options, meas_likelihood, meas, visited, sq_unvisited, i):
     gg = len(post[0])
     best_u = np.array([0, 0])
     max_exp_red_S = -float('inf')
@@ -120,21 +129,22 @@ def get_u(post, path, S, u_options, meas_likelihood):
     for u in u_options: # cycle through all possible u
         rj = path[-1]+u
 
-        exp_red_S = get_exp_red_S(post, rj, S, meas_likelihood)
+        exp_red_S = get_exp_red_S(post, rj, S, meas_likelihood, visited, sq_unvisited)
         exp_red_S_l.append(exp_red_S)
 
         if exp_red_S > max_exp_red_S: # keep u with highest expected entropy recduction
             max_exp_red_S = exp_red_S
             best_u = u
-    print(exp_red_S_l)
+    print('iter={}\tS={}\tz={}\tfsq={}\tu={}\t\texp_red_S={}'.format(i, S, meas, sq_unvisited, best_u, exp_red_S_l))
     return best_u
 
 ### Entropy ###
 
-def get_exp_red_S(post, rj, S, meas_likelihood):
+def get_exp_red_S(post, rj, S, meas_likelihood, visited, sq_unvisited):
     gg = len(post[0])
     pmeas1 = meas_likelihood[int(rj[0]), int(rj[1])]
     likelihood0, likelihood1 = update_likelihood(0, rj[0], rj[1], gg), update_likelihood(1, rj[0], rj[1], gg)
+    visited = update_visited(visited, rj[0], rj[1], sq_unvisited - 1)
 
     post1, post0 = update_post(post, likelihood1), update_post(post, likelihood0)
 
@@ -167,37 +177,40 @@ def main():
         path = np.array([start])
         
         likelihood = init_door(door, gg)
+        sq_unvisited = gg ** 2
+        visited = (1 / (gg**2)) * np.ones((gg,gg))
 
         post = (1 / (gg**2)) * np.ones((gg,gg))
         S = get_S(post)
 
         ### Search
         i = 0
-        while i < 200:
+        while i < 2000:
             if path[-1,0] != door[0] or path[-1,1] != door[1]:
                 # Take binary measurement
                 meas = int(np.random.random() < likelihood[int(path[-1, 0]),int(path[-1, 1])])
                 
                 # Update belief
                 meas_likelihood = update_likelihood(meas, path[-1, 0], path[-1, 1], gg)
+                sq_unvisited = gg ** 2 - len(np.unique(path, axis=0))
+                visited = update_visited(visited, path[-1, 0], path[-1, 1], sq_unvisited)
 
                 post = update_post(post, meas_likelihood)
                 
                 u_options = get_options(path[-1,0], path[-1,1], gg)
-                # u_options = [[-1, 0], [0, 1]]
+
                 # Compute Entropy
-                # S = get_S(post)
-                print(S)
+                S = get_S(post)
 
                 # Take next step based on maximum expected entropy reduction
-                u = get_u(post, path, S, u_options, meas_likelihood)
+                u = get_u(post, path, S, u_options, meas_likelihood, meas, visited, sq_unvisited, i)
                 # u = random.choice(u_options)
                 path = np.vstack((path, path[-1] + u))
-                plt.scatter(path[-1,0], path[-1,1])
-                plt.draw()
-                plt.imshow(post.T)
-                plt.pause(0.001)
-                # print(path[-1])
+                # plt.scatter(path[-1,0], path[-1,1])
+                # plt.draw()
+                # plt.imshow(post.T)
+                # plt.pause(0.001)
+
             else:
                 break
             i += 1
