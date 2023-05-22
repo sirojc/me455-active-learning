@@ -187,6 +187,8 @@ def main():
         post = (1 / (gg**2)) * np.ones((gg,gg))
         S = get_S(post)
 
+        fig2, ax = plt.subplots()
+
         ### Search
         i = 0
         while i < 1000:
@@ -212,12 +214,12 @@ def main():
                 path = np.vstack((path, path[-1] + u))
                 
                 # Belief gif
-                plt.scatter(path[-1,0], path[-1,1])
-                plt.draw()
-                plt.imshow(post.T, origin='lower')
-                plt.tick_params(axis='both', which='both', bottom=False, top=False, labelbottom=False, right=False, left=False, labelleft=False)
-                plt.title('Run ' + str(sim+1))
-                plt.savefig('./ME455_ActiveLearning/HW4/Problem 2/plots/belief_run' + str(sim+1) + '/belief' + str(i) + '.png')
+                ax.scatter(path[-1,0], path[-1,1])
+                #ax.draw()
+                ax.imshow(post.T, origin='lower')
+                ax.tick_params(axis='both', which='both', bottom=False, top=False, labelbottom=False, right=False, left=False, labelleft=False)
+                ax.set_title('Run ' + str(sim+1))
+                fig2.savefig('./ME455_ActiveLearning/HW4/Problem 2/plots/belief_run' + str(sim+1) + '/belief' + str(i) + '.png')
                 belief_plots.append(Image.open('./ME455_ActiveLearning/HW4/Problem 2/plots/belief_run' + str(sim+1) + '/belief' + str(i) + '.png'))
 
             else:
@@ -230,7 +232,8 @@ def main():
     
 
 if __name__ == "__main__":
-    for root, dirs, files in os.walk('./ME455_ActiveLearning/HW4/Problem 2/plots'):
-        for file in files:
-            os.remove(os.path.join(root, file))
+    for i in range(1,5):
+        for root, dirs, files in os.walk('./ME455_ActiveLearning/HW4/Problem 2/plots/belief_run' + str(i)):
+            for file in files:
+                os.remove(os.path.join(root, file))
     main()

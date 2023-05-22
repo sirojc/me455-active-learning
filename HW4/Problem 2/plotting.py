@@ -34,4 +34,4 @@ def plot_trajectory(gg, door, loc, s):
     axs.set_title('Run ' + str(s+1))
     plt.tight_layout()
     plt.savefig('./ME455_ActiveLearning/HW4/Problem 2/plots/trajectory' + str(s+1) + '.png')
-    plt.show()
+    #plt.show()
